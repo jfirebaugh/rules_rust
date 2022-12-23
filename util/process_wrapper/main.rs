@@ -17,6 +17,7 @@ mod options;
 mod output;
 mod rustc;
 mod util;
+mod tinyjson;
 
 use std::fs::{copy, OpenOptions};
 use std::io;
