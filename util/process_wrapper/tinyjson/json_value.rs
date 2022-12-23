@@ -1,3 +1,5 @@
+#![allow(dead_code, unknown_lints, clippy)]
+
 use super::generator::{stringify, JsonGenerateResult};
 use std::collections::HashMap;
 use std::convert::TryInto;

@@ -1,3 +1,5 @@
+#![allow(dead_code, unknown_lints, clippy)]
+
 use std::char;
 use std::collections::HashMap;
 use std::error;

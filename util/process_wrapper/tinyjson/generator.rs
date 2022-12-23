@@ -1,3 +1,5 @@
+#![allow(dead_code, unknown_lints, clippy)]
+
 use super::JsonValue;
 use std::collections::HashMap;
 use std::error;
