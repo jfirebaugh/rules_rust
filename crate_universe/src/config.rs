@@ -286,7 +286,7 @@ impl Add for CrateAnnotations {
         };
 
         let concat_string = |lhs: &mut String, rhs: String| {
-            *lhs = format!("{}{}", lhs, rhs);
+            *lhs = format!("{lhs}{rhs}");
         };
 
         #[rustfmt::skip]
@@ -356,6 +356,16 @@ impl CrateId {
             return true;
         }
 
+        // If the version provided is the wildcard "*", it matches. Do not
+        // delegate to the semver crate in this case because semver does not
+        // consider "*" to match prerelease packages. That's expected behavior
+        // in the context of declaring package dependencies, but not in the
+        // context of declaring which versions of preselected packages an
+        // annotation applies to.
+        if self.version == "*" {
+            return true;
+        }
+
         // Next, check to see if the version provided is a semver req and
         // check if the package matches the condition
         if let Ok(semver) = VersionReq::parse(&self.version) {
@@ -405,8 +415,7 @@ impl<'de> Visitor<'de> for CrateIdVisitor {
             })
             .ok_or_else(|| {
                 E::custom(format!(
-                    "Expected string value of `{{name}} {{version}}`. Got '{}'",
-                    v
+                    "Expected string value of `{{name}} {{version}}`. Got '{v}'"
                 ))
             })
     }
@@ -481,21 +490,25 @@ mod test {
         let mut package = mock_cargo_metadata_package();
         let id = CrateId::new("mock-pkg".to_owned(), "0.1.0".to_owned());
 
-        package.version = cargo_metadata::Version::new(0, 1, 0);
+        package.version = cargo_metadata::semver::Version::new(0, 1, 0);
         assert!(id.matches(&package));
 
-        package.version = cargo_metadata::Version::new(1, 0, 0);
+        package.version = cargo_metadata::semver::Version::new(1, 0, 0);
         assert!(!id.matches(&package));
     }
 
     #[test]
     fn test_crate_id_semver_matches() {
         let mut package = mock_cargo_metadata_package();
-        package.version = cargo_metadata::Version::new(1, 0, 0);
+        package.version = cargo_metadata::semver::Version::new(1, 0, 0);
         let mut id = CrateId::new("mock-pkg".to_owned(), "0.1.0".to_owned());
 
         id.version = "*".to_owned();
         assert!(id.matches(&package));
+
+        let mut prerelease = mock_cargo_metadata_package();
+        prerelease.version = cargo_metadata::semver::Version::parse("1.0.0-pre.0").unwrap();
+        assert!(id.matches(&prerelease));
 
         id.version = "<1".to_owned();
         assert!(!id.matches(&package));

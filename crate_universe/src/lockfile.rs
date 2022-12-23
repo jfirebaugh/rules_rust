@@ -40,7 +40,7 @@ pub fn write_lockfile(lockfile: Context, path: &Path, dry_run: bool) -> Result<(
     let content = serde_json::to_string_pretty(&lockfile)?;
 
     if dry_run {
-        println!("{:#?}", content);
+        println!("{content:#?}");
     } else {
         // Ensure the parent directory exists
         if let Some(parent) = path.parent() {
@@ -229,6 +229,7 @@ mod test {
             supported_platform_triples: BTreeSet::from([
                 "aarch64-apple-darwin".to_owned(),
                 "aarch64-unknown-linux-gnu".to_owned(),
+                "aarch64-pc-windows-msvc".to_owned(),
                 "wasm32-unknown-unknown".to_owned(),
                 "wasm32-wasi".to_owned(),
                 "x86_64-apple-darwin".to_owned(),
@@ -252,7 +253,7 @@ mod test {
 
         assert_eq!(
             digest,
-            Digest("756a613410573552bb8a85d6fcafd24a9df3000b8d943bf74c38bda9c306ef0e".to_owned())
+            Digest("33dbf61e3b2aabacadaf7ff0c9862af25703cb851436efcbdf8552735be844ba".to_owned())
         );
     }
 
@@ -283,7 +284,7 @@ mod test {
 
         assert_eq!(
             digest,
-            Digest("851b789765d8ee248fd3d55840ffd702ba2f8b0ca6aed2faa45ea63d1b011a99".to_owned())
+            Digest("3e31f3bc115309aadcb8817149d8a5bd125012220bd3caaea1a17f6c5b0fade4".to_owned())
         );
     }
 

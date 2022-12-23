@@ -2,10 +2,15 @@
 aspects_flags: &aspects_flags
   - "--config=rustfmt"
   - "--config=clippy"
+min_rust_version_shell_commands: &min_rust_version_shell_commands
+  - sed -i 's|^rust_register_toolchains(|rust_register_toolchains(versions = ["1.59.0"],\n|' WORKSPACE.bazel
+single_rust_channel_targets: &single_rust_channel_targets
+  - "--"
+  - "//..."
+  # These tests are expected to fail as they require both a nightly and stable toolchain.
+  - "-//test/unit/channel_transitions/..."
 default_linux_targets: &default_linux_targets
   - "//..."
-  # TODO: Switch manual tag to platform constraint after bazel 4.0.
-  - "//test/versioned_dylib:versioned_dylib_test"
 default_macos_targets: &default_macos_targets
   - "--"
   - "//..."
@@ -19,6 +24,9 @@ crate_universe_vendor_example_targets: &crate_universe_vendor_example_targets
   - "//vendor_external:crates_vendor"
   - "//vendor_local_manifests:crates_vendor"
   - "//vendor_local_pkgs:crates_vendor"
+  - "//vendor_remote_manifests:crates_vendor_manifests"
+  - "//vendor_remote_pkgs:crates_vendor_pkgs"
+crate_universe_unnamed_vendor_example_targets: &crate_universe_unnamed_vendor_example_targets
   - "//vendor_remote_manifests:crates_vendor_manifests"
   - "//vendor_remote_pkgs:crates_vendor_pkgs"
 tasks:
@@ -37,16 +45,46 @@ tasks:
       - "//..."
       - "//test/..."
       - "-//test/conflicting_deps:conflicting_deps_test"
+      # TODO: This test does not work on RBE
+      - "-//test/versioned_dylib:versioned_dylib_test"
   macos:
     build_targets: *default_macos_targets
     test_targets: *default_macos_targets
     coverage_targets: *default_macos_targets
-    build_flags: *aspects_flags
   windows:
     build_flags:
       - "--enable_runfiles" # this is not enabled by default on windows and is necessary for the cargo build scripts
-      - "--config=rustfmt"
-      - "--config=clippy"
+    test_flags:
+      - "--enable_runfiles"
+    build_targets: *default_windows_targets
+    test_targets: *default_windows_targets
+  ubuntu2004_opt:
+    name: Opt Mode
+    platform: ubuntu2004
+    build_targets: *default_linux_targets
+    test_targets: *default_linux_targets
+    build_flags:
+      - "--compilation_mode=opt"
+    test_flags:
+      - "--compilation_mode=opt"
+  macos_opt:
+    name: Opt Mode
+    platform: macos
+    build_targets: *default_macos_targets
+    test_targets: *default_macos_targets
+    build_flags:
+      - "--compilation_mode=opt"
+    test_flags:
+      - "--compilation_mode=opt"
+  windows_opt:
+    name: Opt Mode
+    platform: windows
+    build_flags:
+      - "--enable_runfiles" # this is not enabled by default on windows and is necessary for the cargo build scripts
+      - "--compilation_mode=opt"
+    test_flags:
+      - "--enable_runfiles"
+      - "--compilation_mode=opt"
     build_targets: *default_windows_targets
     test_targets: *default_windows_targets
   ubuntu2004_with_aspects:
@@ -67,6 +105,8 @@ tasks:
       - "..."
       - "//test/..."
       - "-//test/conflicting_deps:conflicting_deps_test"
+      # TODO: This test does not work on RBE
+      - "-//test/versioned_dylib:versioned_dylib_test"
     build_flags: *aspects_flags
   rbe_ubuntu1604_rolling_with_aspects:
     name: RBE Rolling Bazel Version With Aspects
@@ -80,6 +120,8 @@ tasks:
       - "..."
       - "//test/..."
       - "-//test/conflicting_deps:conflicting_deps_test"
+      # TODO: This test does not work on RBE
+      - "-//test/versioned_dylib:versioned_dylib_test"
     build_flags: *aspects_flags
     soft_fail: yes
     bazel: "rolling"
@@ -104,6 +146,8 @@ tasks:
       - "--enable_runfiles" # this is not enabled by default on windows and is necessary for the cargo build scripts
       - "--config=rustfmt"
       - "--config=clippy"
+    test_flags:
+      - "--enable_runfiles"
     build_targets: *default_windows_targets
     test_targets: *default_windows_targets
   windows_rolling_with_aspects:
@@ -113,6 +157,8 @@ tasks:
       - "--enable_runfiles" # this is not enabled by default on windows and is necessary for the cargo build scripts
       - "--config=rustfmt"
       - "--config=clippy"
+    test_flags:
+      - "--enable_runfiles"
     build_targets: *default_windows_targets
     test_targets: *default_windows_targets
     soft_fail: yes
@@ -151,6 +197,7 @@ tasks:
     bazel: "rolling"
   ubuntu1804:
     name: "Min Bazel Version"
+    # If updating the minimum bazel version, please also update /docs/index.md
     bazel: "5.0.0"
     platform: ubuntu1804
     build_targets: *default_linux_targets
@@ -161,6 +208,19 @@ tasks:
     platform: ubuntu1804
     build_targets: *default_linux_targets
     test_targets: *default_linux_targets
+    build_flags: *aspects_flags
+  ubuntu2004_min_rust_version:
+    name: "Min Rust Version"
+    platform: ubuntu2004
+    shell_commands: *min_rust_version_shell_commands
+    build_targets: *single_rust_channel_targets
+    test_targets: *single_rust_channel_targets
+  ubuntu2004_min_rust_version_with_aspects:
+    name: "Min Rust Version With Aspects"
+    platform: ubuntu2004
+    shell_commands: *min_rust_version_shell_commands
+    build_targets: *single_rust_channel_targets
+    test_targets: *single_rust_channel_targets
     build_flags: *aspects_flags
   ubuntu2004_rolling_with_aspects:
     name: "Rolling Bazel Version With Aspects"
@@ -275,6 +335,8 @@ tasks:
       - "--enable_runfiles" # this is not enabled by default on windows and is necessary for the cargo build scripts
       - "--config=rustfmt"
       - "--config=clippy"
+    test_flags:
+      - "--enable_runfiles"
     windows_targets: &windows_targets
       - "--" # Allows negative patterns; hack for https://github.com/bazelbuild/continuous-integration/pull/245
       - "//..."
@@ -297,6 +359,16 @@ tasks:
     test_targets:
       - "//..."
     build_flags: *aspects_flags
+  crate_universe_unnamed_examples_ubuntu2004:
+    name: Crate Universe Unnamed Examples
+    platform: ubuntu2004
+    working_directory: examples/crate_universe_unnamed
+    run_targets: *crate_universe_unnamed_vendor_example_targets
+    build_targets:
+      - "//..."
+    test_targets:
+      - "//..."
+    build_flags: *aspects_flags
   crate_universe_rbe_ubuntu1604:
     name: Crate Universe Examples
     platform: rbe_ubuntu1604
@@ -310,11 +382,34 @@ tasks:
     test_targets:
       - "//..."
     build_flags: *aspects_flags
+  crate_universe_unnamed_rbe_ubuntu1604:
+    name: Crate Universe Unnamed Examples
+    platform: rbe_ubuntu1604
+    working_directory: examples/crate_universe_unnamed
+    shell_commands:
+      - sed -i 's/^# load("@bazelci_rules/load("@bazelci_rules/' WORKSPACE.bazel
+      - sed -i 's/^# rbe_preconfig/rbe_preconfig/' WORKSPACE.bazel
+    run_targets: *crate_universe_unnamed_vendor_example_targets
+    build_targets:
+      - "//..."
+    test_targets:
+      - "//..."
+    build_flags: *aspects_flags
   crate_universe_examples_macos:
     name: Crate Universe Examples
     platform: macos
     working_directory: examples/crate_universe
     run_targets: *crate_universe_vendor_example_targets
+    build_targets:
+      - "//..."
+    test_targets:
+      - "//..."
+    build_flags: *aspects_flags
+  crate_universe_unnamed_examples_macos:
+    name: Crate Universe Unnamed Examples
+    platform: macos
+    working_directory: examples/crate_universe_unnamed
+    run_targets: *crate_universe_unnamed_vendor_example_targets
     build_targets:
       - "//..."
     test_targets:
@@ -333,6 +428,19 @@ tasks:
       - "//..."
     test_targets:
       - "//..."
+  crate_universe_unnamed_examples_windows:
+    name: Crate Universe Unnamed Examples
+    platform: windows
+    working_directory: examples/crate_universe_unnamed
+    batch_commands:
+      - echo startup --windows_enable_symlinks >> user.bazelrc
+      - echo build --enable_runfiles >> user.bazelrc  # this is not enabled by default on windows and is necessary for the cargo build scripts
+    run_targets: *crate_universe_unnamed_vendor_example_targets
+    build_flags: *aspects_flags
+    build_targets:
+      - "//..."
+    test_targets:
+      - "//..."
   cc_common_link_ubuntu2004:
     name: Build via cc_common.link
     platform: ubuntu2004
@@ -343,7 +451,39 @@ tasks:
       - "//..."
     build_flags:
       - "--@rules_rust//rust/settings:experimental_use_cc_common_link=True"
-
+  android_examples_ubuntu2004:
+    name: Android Examples
+    platform: ubuntu2004
+    working_directory: examples/android
+    build_targets:
+      - "//:android_app"
+  android_examples_macos:
+    name: Android Examples
+    platform: macos
+    working_directory: examples/android
+    build_targets:
+      - "//:android_app"
+  ios_examples:
+    name: iOS Examples
+    platform: macos
+    working_directory: examples/ios
+    build_targets:
+      - "//..."
+  ios_build:
+    name: iOS build script cross compile test
+    platform: macos
+    working_directory: examples/ios_build
+    test_flags:
+      - "--cpu=ios_x86_64"
+      - "--apple_platform_type=ios"
+    test_targets:
+      - "//..."
+  zig_cross_compiling:
+    name: Zig cross compiling test
+    platform: ubuntu2004
+    working_directory: examples/zig_cross_compiling
+    build_targets:
+      - "//..."
 
 buildifier:
   version: latest

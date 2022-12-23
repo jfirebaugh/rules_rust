@@ -118,7 +118,7 @@ impl<'a> SplicerKind<'a> {
                     .keys()
                     .map(|p| {
                         p.normalize()
-                            .with_context(|| format!("Failed to normalize path {:?}", p))
+                            .with_context(|| format!("Failed to normalize path {p:?}"))
                     })
                     .collect::<Result<_, _>>()?,
             )
@@ -165,7 +165,7 @@ impl<'a> SplicerKind<'a> {
             .map(|member| {
                 let path = root_manifest_dir.join(member).join("Cargo.toml");
                 path.normalize()
-                    .with_context(|| format!("Failed to normalize path {:?}", path))
+                    .with_context(|| format!("Failed to normalize path {path:?}"))
             })
             .collect::<Result<BTreeSet<normpath::BasePathBuf>, _>>()?;
 
@@ -178,10 +178,7 @@ impl<'a> SplicerKind<'a> {
             .map(|workspace_manifest_path| {
                 let label = Label::from_absolute_path(workspace_manifest_path.as_path())
                     .with_context(|| {
-                        format!(
-                            "Failed to identify label for path {:?}",
-                            workspace_manifest_path
-                        )
+                        format!("Failed to identify label for path {workspace_manifest_path:?}")
                     })?;
                 Ok(label.to_string())
             })
@@ -227,7 +224,9 @@ impl<'a> SplicerKind<'a> {
         Self::setup_cargo_config(&splicing_manifest.cargo_config, workspace_dir)?;
 
         // Add any additional depeendencies to the root package
-        Self::inject_direct_packages(&mut manifest, &splicing_manifest.direct_packages)?;
+        if !splicing_manifest.direct_packages.is_empty() {
+            Self::inject_direct_packages(&mut manifest, &splicing_manifest.direct_packages)?;
+        }
 
         let root_manifest_path = workspace_dir.join("Cargo.toml");
         let member_manifests = HashMap::from([(*path, String::new())]);
@@ -266,8 +265,10 @@ impl<'a> SplicerKind<'a> {
                 default_cargo_workspace_manifest(&splicing_manifest.resolver_version).workspace
         }
 
-        // Add any additional depeendencies to the root package
-        Self::inject_direct_packages(&mut manifest, &splicing_manifest.direct_packages)?;
+        // Add any additional dependencies to the root package
+        if !splicing_manifest.direct_packages.is_empty() {
+            Self::inject_direct_packages(&mut manifest, &splicing_manifest.direct_packages)?;
+        }
 
         let root_manifest_path = workspace_dir.join("Cargo.toml");
         let member_manifests = HashMap::from([(*path, String::new())]);
@@ -301,7 +302,9 @@ impl<'a> SplicerKind<'a> {
         workspace_metadata.inject_into(&mut manifest)?;
 
         // Add any additional depeendencies to the root package
-        Self::inject_direct_packages(&mut manifest, &splicing_manifest.direct_packages)?;
+        if !splicing_manifest.direct_packages.is_empty() {
+            Self::inject_direct_packages(&mut manifest, &splicing_manifest.direct_packages)?;
+        }
 
         // Write the root manifest
         let root_manifest_path = workspace_dir.join("Cargo.toml");
@@ -390,7 +393,7 @@ impl<'a> SplicerKind<'a> {
                 fs::create_dir_all(&dot_cargo_dir)?;
             }
 
-            fs::copy(cargo_config_path, &dot_cargo_dir.join("config.toml"))?;
+            fs::copy(cargo_config_path, dot_cargo_dir.join("config.toml"))?;
         }
 
         Ok(())
@@ -482,8 +485,8 @@ impl Splicer {
         // Load all manifests
         let manifests = splicing_manifest
             .manifests
-            .iter()
-            .map(|(path, _)| {
+            .keys()
+            .map(|path| {
                 let m = read_manifest(path)
                     .with_context(|| format!("Failed to read manifest at {}", path.display()))?;
                 Ok((path.clone(), m))
@@ -542,9 +545,8 @@ pub fn default_cargo_workspace_manifest(
     let mut manifest = cargo_toml::Manifest::from_str(&textwrap::dedent(&format!(
         r#"
             [workspace]
-            resolver = "{}"
+            resolver = "{resolver_version}"
         "#,
-        resolver_version,
     )))
     .unwrap();
 
@@ -609,7 +611,7 @@ pub fn write_root_manifest(path: &Path, manifest: cargo_toml::Manifest) -> Resul
     }
 
     // TODO(https://gitlab.com/crates.rs/cargo_toml/-/issues/3)
-    let value = toml::Value::try_from(&manifest)?;
+    let value = toml::Value::try_from(manifest)?;
     fs::write(path, toml::to_string(&value)?)
         .context(format!("Failed to write manifest to {}", path.display()))
 }
@@ -861,7 +863,7 @@ mod test {
 
             splicing_manifest.manifests.insert(
                 manifest_path,
-                Label::from_str(&format!("//{}:Cargo.toml", pkg)).unwrap(),
+                Label::from_str(&format!("//{pkg}:Cargo.toml")).unwrap(),
             );
         }
 
@@ -888,26 +890,22 @@ mod test {
         }
         let root_pkg = workspace_root.join("root_pkg");
         let manifest_path = root_pkg.join("Cargo.toml");
-        fs::create_dir_all(&manifest_path.parent().unwrap()).unwrap();
+        fs::create_dir_all(manifest_path.parent().unwrap()).unwrap();
         fs::write(&manifest_path, toml::to_string(&manifest).unwrap()).unwrap();
         {
             File::create(root_pkg.join("BUILD.bazel")).unwrap();
-        }
-
-        let sub_pkg_a = root_pkg.join("sub_pkg_a");
-        let sub_pkg_b = root_pkg.join("sub_pkg_b");
-        {
-            fs::create_dir_all(&sub_pkg_a).unwrap();
-            File::create(sub_pkg_a.join("BUILD.bazel")).unwrap();
-
-            fs::create_dir_all(&sub_pkg_b).unwrap();
-            File::create(sub_pkg_b.join("BUILD.bazel")).unwrap();
         }
 
         splicing_manifest.manifests.insert(
             manifest_path,
             Label::from_str("//root_pkg:Cargo.toml").unwrap(),
         );
+
+        for sub_pkg in ["sub_pkg_a", "sub_pkg_b"] {
+            let sub_pkg_path = root_pkg.join(sub_pkg);
+            fs::create_dir_all(&sub_pkg_path).unwrap();
+            File::create(sub_pkg_path.join("BUILD.bazel")).unwrap();
+        }
 
         (splicing_manifest, cache_dir)
     }
@@ -923,7 +921,7 @@ mod test {
 
             splicing_manifest.manifests.insert(
                 manifest_path,
-                Label::from_str(&format!("//{}:Cargo.toml", pkg)).unwrap(),
+                Label::from_str(&format!("//{pkg}:Cargo.toml")).unwrap(),
             );
         }
 
@@ -949,22 +947,18 @@ mod test {
             File::create(workspace_root.join("WORKSPACE.bazel")).unwrap();
         }
         let manifest_path = workspace_root.join("Cargo.toml");
-        fs::create_dir_all(&manifest_path.parent().unwrap()).unwrap();
+        fs::create_dir_all(manifest_path.parent().unwrap()).unwrap();
         fs::write(&manifest_path, toml::to_string(&manifest).unwrap()).unwrap();
-
-        let sub_pkg_a = workspace_root.join("sub_pkg_a");
-        let sub_pkg_b = workspace_root.join("sub_pkg_b");
-        {
-            fs::create_dir_all(&sub_pkg_a).unwrap();
-            File::create(sub_pkg_a.join("BUILD.bazel")).unwrap();
-
-            fs::create_dir_all(&sub_pkg_b).unwrap();
-            File::create(sub_pkg_b.join("BUILD.bazel")).unwrap();
-        }
 
         splicing_manifest
             .manifests
             .insert(manifest_path, Label::from_str("//:Cargo.toml").unwrap());
+
+        for sub_pkg in ["sub_pkg_a", "sub_pkg_b"] {
+            let sub_pkg_path = workspace_root.join(sub_pkg);
+            fs::create_dir_all(&sub_pkg_path).unwrap();
+            File::create(sub_pkg_path.join("BUILD.bazel")).unwrap();
+        }
 
         (splicing_manifest, cache_dir)
     }
@@ -1010,11 +1004,11 @@ mod test {
 
         if is_root {
             PackageId {
-                repr: format!("{} 0.0.1 (path+file://{})", name, workspace_root),
+                repr: format!("{name} 0.0.1 (path+file://{workspace_root})"),
             }
         } else {
             PackageId {
-                repr: format!("{} 0.0.1 (path+file://{}/{})", name, workspace_root, name,),
+                repr: format!("{name} 0.0.1 (path+file://{workspace_root}/{name})"),
             }
         }
     }
@@ -1048,6 +1042,13 @@ mod test {
             mock_workspace_metadata(false, None)
         );
 
+        // Since no direct packages were added to the splicing manifest, the cargo_bazel
+        // deps target should __not__ have been injected into the manifest.
+        assert!(!metadata
+            .packages
+            .iter()
+            .any(|pkg| pkg.name == DEFAULT_SPLICING_PACKAGE_NAME));
+
         // Ensure lockfile was successfully spliced
         cargo_lock::Lockfile::load(workspace_root.as_ref().join("Cargo.lock")).unwrap();
     }
@@ -1080,6 +1081,13 @@ mod test {
             metadata.workspace_metadata,
             mock_workspace_metadata(false, None)
         );
+
+        // Since no direct packages were added to the splicing manifest, the cargo_bazel
+        // deps target should __not__ have been injected into the manifest.
+        assert!(!metadata
+            .packages
+            .iter()
+            .any(|pkg| pkg.name == DEFAULT_SPLICING_PACKAGE_NAME));
 
         // Ensure lockfile was successfully spliced
         cargo_lock::Lockfile::load(workspace_root.as_ref().join("Cargo.lock")).unwrap();
@@ -1153,7 +1161,7 @@ mod test {
         fs::create_dir_all(external_manifest.parent().unwrap()).unwrap();
         fs::write(
             &external_manifest,
-            &textwrap::dedent(
+            textwrap::dedent(
                 r#"
                 [package]
                 name = "external_workspace_member"
@@ -1191,6 +1199,46 @@ mod test {
                 .contains("A package was provided that appears to be a part of another workspace.")
                 && err_str.contains(&bytes_str)
         );
+    }
+
+    #[test]
+    fn splice_workspace_no_root_pkg() {
+        let (splicing_manifest, cache_dir) = mock_splicing_manifest_with_workspace_in_root();
+
+        // Modify the root manifest to remove the rendered package
+        fs::write(
+            cache_dir.as_ref().join("Cargo.toml"),
+            textwrap::dedent(
+                r#"
+                [workspace]
+                members = [
+                    "sub_pkg_a",
+                    "sub_pkg_b",
+                ]
+                "#,
+            ),
+        )
+        .unwrap();
+
+        // Splice the workspace
+        let workspace_root = tempfile::tempdir().unwrap();
+        let workspace_manifest =
+            Splicer::new(workspace_root.as_ref().to_path_buf(), splicing_manifest)
+                .unwrap()
+                .splice_workspace(&cargo())
+                .unwrap();
+
+        let metadata = generate_metadata(workspace_manifest.as_path_buf());
+
+        // Since no direct packages were added to the splicing manifest, the cargo_bazel
+        // deps target should __not__ have been injected into the manifest.
+        assert!(!metadata
+            .packages
+            .iter()
+            .any(|pkg| pkg.name == DEFAULT_SPLICING_PACKAGE_NAME));
+
+        // Ensure lockfile was successfully spliced
+        cargo_lock::Lockfile::load(workspace_root.as_ref().join("Cargo.lock")).unwrap();
     }
 
     #[test]
@@ -1253,8 +1301,6 @@ mod test {
                 new_package_id("pkg_a", workspace_root.as_ref(), false),
                 new_package_id("pkg_b", workspace_root.as_ref(), false),
                 new_package_id("pkg_c", workspace_root.as_ref(), false),
-                // Multi package renderings always add a root package
-                new_package_id("direct-cargo-bazel-deps", workspace_root.as_ref(), true),
             ]
         );
 
@@ -1302,8 +1348,6 @@ mod test {
                 new_package_id("pkg_a", workspace_root.as_ref(), false),
                 new_package_id("pkg_b", workspace_root.as_ref(), false),
                 new_package_id("pkg_c", workspace_root.as_ref(), false),
-                // Multi package renderings always add a root package
-                new_package_id("direct-cargo-bazel-deps", workspace_root.as_ref(), true),
             ]
         );
 
@@ -1315,6 +1359,37 @@ mod test {
 
         // Ensure lockfile was successfully spliced
         cargo_lock::Lockfile::load(workspace_root.as_ref().join("Cargo.lock")).unwrap();
+    }
+
+    #[test]
+    fn splice_multi_package_with_direct_deps() {
+        let (mut splicing_manifest, _cache_dir) = mock_splicing_manifest_with_multi_package();
+
+        // Add a "direct dependency" entry
+        splicing_manifest.direct_packages.insert(
+            "fake_pkg".to_owned(),
+            cargo_toml::DependencyDetail {
+                version: Some("1.2.3".to_owned()),
+                ..cargo_toml::DependencyDetail::default()
+            },
+        );
+
+        // Splice the workspace
+        let workspace_root = tempfile::tempdir().unwrap();
+        let workspace_manifest =
+            Splicer::new(workspace_root.as_ref().to_path_buf(), splicing_manifest)
+                .unwrap()
+                .splice_workspace(&cargo())
+                .unwrap();
+
+        // Check the default resolver version
+        let cargo_manifest = cargo_toml::Manifest::from_str(
+            &fs::read_to_string(workspace_manifest.as_path_buf()).unwrap(),
+        )
+        .unwrap();
+
+        // Due to the addition of direct deps for splicing, this package should have been added to the root manfiest.
+        assert!(cargo_manifest.package.unwrap().name == DEFAULT_SPLICING_PACKAGE_NAME);
     }
 
     #[test]
@@ -1604,6 +1679,6 @@ mod test {
 
     fn touch(path: &Path) {
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-        std::fs::write(path, &[]).unwrap();
+        std::fs::write(path, []).unwrap();
     }
 }

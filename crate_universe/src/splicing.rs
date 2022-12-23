@@ -310,11 +310,11 @@ impl WorkspaceMetadata {
 
                     // Load the index for the current url
                     let index = crates_index::Index::from_url(index_url)
-                        .with_context(|| format!("Failed to load index for url: {}", index_url))?;
+                        .with_context(|| format!("Failed to load index for url: {index_url}"))?;
 
                     // Ensure each index has a valid index config
                     index.index_config().with_context(|| {
-                        format!("`config.json` not found in index: {}", index_url)
+                        format!("`config.json` not found in index: {index_url}")
                     })?;
 
                     index
@@ -485,7 +485,7 @@ mod test {
         assert_eq!(
             package,
             &cargo_toml::DependencyDetail {
-                default_features: Some(false),
+                default_features: false,
                 features: vec!["small_rng".to_owned()],
                 version: Some("0.8.5".to_owned()),
                 ..Default::default()

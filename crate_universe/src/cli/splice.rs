@@ -22,7 +22,7 @@ pub struct SpliceOptions {
     pub cargo_lockfile: Option<PathBuf>,
 
     /// The desired update/repin behavior
-    #[clap(long, env = "CARGO_BAZEL_REPIN", default_missing_value = "true")]
+    #[clap(long, env = "CARGO_BAZEL_REPIN", num_args=0..=1, default_missing_value = "true")]
     pub repin: Option<CargoUpdateRequest>,
 
     /// The directory in which to build the workspace. If this argument is not
@@ -90,7 +90,7 @@ pub fn splice(opt: SpliceOptions) -> Result<()> {
     let (cargo_metadata, _) = Generator::new()
         .with_cargo(opt.cargo)
         .with_rustc(opt.rustc)
-        .generate(&manifest_path.as_path_buf())?;
+        .generate(manifest_path.as_path_buf())?;
 
     let cargo_lockfile_path = manifest_path
         .as_path_buf()

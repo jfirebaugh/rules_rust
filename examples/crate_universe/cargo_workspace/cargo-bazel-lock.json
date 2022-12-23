@@ -1,5 +1,5 @@
 {
-  "checksum": "7d58a2569ecff202c9bf834d2bba05d02a1270dac40630c0e408216b07b2eb4f",
+  "checksum": "b819ab7a9515daeda37fef72ae16248adc6932c0e099da7064a227fb0dd096d0",
   "crates": {
     "ansi_term 0.12.1": {
       "name": "ansi_term",
@@ -84,7 +84,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.126",
+                "id": "libc 0.2.137",
                 "target": "libc"
               }
             ],
@@ -226,7 +226,7 @@
               "target": "textwrap"
             },
             {
-              "id": "unicode-width 0.1.9",
+              "id": "unicode-width 0.1.10",
               "target": "unicode_width"
             },
             {
@@ -247,34 +247,6 @@
         "version": "2.34.0"
       },
       "license": "MIT"
-    },
-    "direct-cargo-bazel-deps 0.0.1": {
-      "name": "direct-cargo-bazel-deps",
-      "version": "0.0.1",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "direct_cargo_bazel_deps",
-            "crate_root": ".direct_cargo_bazel_deps.rs",
-            "srcs": {
-              "include": [
-                "**/*.rs"
-              ],
-              "exclude": []
-            }
-          }
-        }
-      ],
-      "library_target_name": "direct_cargo_bazel_deps",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "edition": "2018",
-        "version": "0.0.1"
-      },
-      "license": null
     },
     "ferris-says 0.2.1": {
       "name": "ferris-says",
@@ -315,7 +287,7 @@
               "target": "textwrap"
             },
             {
-              "id": "unicode-width 0.1.9",
+              "id": "unicode-width 0.1.10",
               "target": "unicode_width"
             }
           ],
@@ -389,7 +361,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.126",
+                "id": "libc 0.2.137",
                 "target": "libc"
               }
             ]
@@ -439,7 +411,7 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.126",
+              "id": "libc 0.2.137",
               "target": "libc"
             }
           ],
@@ -450,13 +422,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "libc 0.2.126": {
+    "libc 0.2.137": {
       "name": "libc",
-      "version": "0.2.126",
+      "version": "0.2.137",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/libc/0.2.126/download",
-          "sha256": "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
+          "url": "https://crates.io/api/v1/crates/libc/0.2.137/download",
+          "sha256": "fc7fcc620a3bff7cdd7a365be3376c97191aeaccc2a603e600951e452615bf89"
         }
       },
       "targets": [
@@ -493,14 +465,14 @@
         "deps": {
           "common": [
             {
-              "id": "libc 0.2.126",
+              "id": "libc 0.2.137",
               "target": "build_script_build"
             }
           ],
           "selects": {}
         },
         "edition": "2015",
-        "version": "0.2.126"
+        "version": "0.2.137"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -546,13 +518,13 @@
       },
       "license": null
     },
-    "ppv-lite86 0.2.16": {
+    "ppv-lite86 0.2.17": {
       "name": "ppv-lite86",
-      "version": "0.2.16",
+      "version": "0.2.17",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/ppv-lite86/0.2.16/download",
-          "sha256": "eb9f9e6e233e5c4a35559a617bf40a4ec447db2e84c20b55a6f83167b7e57872"
+          "url": "https://crates.io/api/v1/crates/ppv-lite86/0.2.17/download",
+          "sha256": "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
         }
       },
       "targets": [
@@ -579,7 +551,7 @@
           "std"
         ],
         "edition": "2018",
-        "version": "0.2.16"
+        "version": "0.2.17"
       },
       "license": "MIT/Apache-2.0"
     },
@@ -683,7 +655,7 @@
             ],
             "cfg(unix)": [
               {
-                "id": "libc 0.2.126",
+                "id": "libc 0.2.137",
                 "target": "libc"
               }
             ]
@@ -728,7 +700,7 @@
         "deps": {
           "common": [
             {
-              "id": "ppv-lite86 0.2.16",
+              "id": "ppv-lite86 0.2.17",
               "target": "ppv_lite86"
             },
             {
@@ -1003,7 +975,7 @@
         "deps": {
           "common": [
             {
-              "id": "unicode-width 0.1.9",
+              "id": "unicode-width 0.1.10",
               "target": "unicode_width"
             }
           ],
@@ -1054,7 +1026,7 @@
               "target": "smawk"
             },
             {
-              "id": "unicode-width 0.1.9",
+              "id": "unicode-width 0.1.10",
               "target": "unicode_width"
             }
           ],
@@ -1065,13 +1037,13 @@
       },
       "license": "MIT"
     },
-    "unicode-width 0.1.9": {
+    "unicode-width 0.1.10": {
       "name": "unicode-width",
-      "version": "0.1.9",
+      "version": "0.1.10",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/unicode-width/0.1.9/download",
-          "sha256": "3ed742d4ea2bd1176e236172c8429aaf54486e7ac098db29ffe6529e0ce50973"
+          "url": "https://crates.io/api/v1/crates/unicode-width/0.1.10/download",
+          "sha256": "c0edd1e5b14653f783770bce4a4dabb4a5108a5370a5f5d8cfe8710c361f6c8b"
         }
       },
       "targets": [
@@ -1097,7 +1069,7 @@
           "default"
         ],
         "edition": "2015",
-        "version": "0.1.9"
+        "version": "0.1.10"
       },
       "license": "MIT/Apache-2.0"
     },
@@ -1374,7 +1346,6 @@
   },
   "binary_crates": [],
   "workspace_members": {
-    "direct-cargo-bazel-deps 0.0.1": "cargo_workspace",
     "num_printer 0.1.0": "cargo_workspace/num_printer",
     "printer 0.1.0": "cargo_workspace/printer",
     "rng 0.1.0": "cargo_workspace/rng"
@@ -1385,6 +1356,7 @@
       "aarch64-apple-ios",
       "aarch64-apple-ios-sim",
       "aarch64-linux-android",
+      "aarch64-pc-windows-msvc",
       "aarch64-unknown-linux-gnu",
       "arm-unknown-linux-gnueabi",
       "armv7-linux-androideabi",
@@ -1396,6 +1368,7 @@
       "i686-unknown-linux-gnu",
       "powerpc-unknown-linux-gnu",
       "riscv32imc-unknown-none-elf",
+      "riscv64gc-unknown-none-elf",
       "s390x-unknown-linux-gnu",
       "wasm32-unknown-unknown",
       "wasm32-wasi",
@@ -1421,6 +1394,7 @@
       "i686-unknown-linux-gnu",
       "powerpc-unknown-linux-gnu",
       "riscv32imc-unknown-none-elf",
+      "riscv64gc-unknown-none-elf",
       "s390x-unknown-linux-gnu",
       "wasm32-unknown-unknown",
       "wasm32-wasi",
@@ -1436,6 +1410,7 @@
       "wasm32-wasi"
     ],
     "cfg(target_os = \"windows\")": [
+      "aarch64-pc-windows-msvc",
       "i686-pc-windows-msvc",
       "x86_64-pc-windows-msvc"
     ],
@@ -1461,6 +1436,7 @@
       "x86_64-unknown-linux-gnu"
     ],
     "cfg(windows)": [
+      "aarch64-pc-windows-msvc",
       "i686-pc-windows-msvc",
       "x86_64-pc-windows-msvc"
     ],

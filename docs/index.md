@@ -22,11 +22,8 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 # https://github.com/bazelbuild/rules_rust/releases
 http_archive(
     name = "rules_rust",
-    sha256 = "6bfe75125e74155955d8a9854a8811365e6c0f3d33ed700bc17f39e32522c822",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_rust/releases/download/0.9.0/rules_rust-v0.9.0.tar.gz",
-        "https://github.com/bazelbuild/rules_rust/releases/download/0.9.0/rules_rust-v0.9.0.tar.gz",
-    ],
+    sha256 = "696b01deea96a5e549f1b5ae18589e1bbd5a1d71a36a243b5cf76a9433487cf2",
+    urls = ["https://github.com/bazelbuild/rules_rust/releases/download/0.11.0/rules_rust-v0.11.0.tar.gz"],
 )
 
 load("@rules_rust//rust:repositories.bzl", "rules_rust_dependencies", "rust_register_toolchains")
@@ -36,10 +33,7 @@ rules_rust_dependencies()
 rust_register_toolchains()
 ```
 
-The rules are under active development, as such the lastest commit on the
-`main` branch should be used. `main` is only tested against `5.0.0` as the
-minimum supported version of Bazel. Though previous versions may still be
-functional in certain environments.
+The rules are released, and releases can be found on [the GitHub Releases page](https://github.com/bazelbuild/rules_rust/releases). We recommend using the latest release from that page.
 
 ## Rules
 
@@ -51,7 +45,7 @@ functional in certain environments.
 - [rust_bindgen](rust_bindgen.md): rules for generating C++ bindings.
 - [rust_wasm_bindgen](rust_wasm_bindgen.md): rules for generating [WebAssembly](https://www.rust-lang.org/what/wasm) bindings.
 - [cargo](cargo.md): Rules dedicated to Cargo compatibility. ie: [`build.rs` scripts](https://doc.rust-lang.org/cargo/reference/build-scripts.html).
-- [crate_universe](crate_universe.md): Rules for generating Bazel targets for external crate depednencies.
+- [crate_universe](crate_universe.md): Rules for generating Bazel targets for external crate dependencies.
 
 You can also browse the [full API in one page](flatten.md).
 
@@ -82,3 +76,17 @@ rust_register_toolchains(rustfmt_version = "1.62.1")
 ## External Dependencies
 
 [crate_universe](crate_universe.md) is a tool built into `rules_rust` that can be used to fetch dependencies. Additionally, [cargo-raze](https://github.com/google/cargo-raze) is an older third-party which can also fetch dependencies.
+
+## Supported bazel versions
+
+The oldest version of Bazel the `main` branch is tested against is `5.0.0`. Previous versions may still be functional in certain environments, but this is the minimum version we strive to fully support.
+
+We test these rules against the latest rolling releases of Bazel, and aim for compatibility with them, but prioritise stable releases over rolling releases where necessary.
+
+## Supported platforms
+
+We aim to support Linux, macOS, and Windows.
+
+Windows support is less complete than the other two platforms, but most things work, and we welcome contributions to help improve its support.
+
+Windows support for some features requires `--enable_runfiles` to be passed to Bazel, we recommend putting it in your bazelrc. See [Using Bazel on Windows](https://bazel.build/configure/windows) for more Windows-specific recommendations.
