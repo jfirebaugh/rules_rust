@@ -1,5 +1,3 @@
-#![allow(dead_code, unknown_lints, clippy)]
-
 use std::char;
 use std::collections::HashMap;
 use std::error;
@@ -40,10 +38,7 @@ pub type JsonParseResult = Result<JsonValue, JsonParseError>;
 // whitespace character in JSON spec. For example, U+000C FORM FEED is whitespace in Rust but
 // it isn't in JSON.
 fn is_whitespace(c: char) -> bool {
-    match c {
-        '\u{0020}' | '\u{000a}' | '\u{000d}' | '\u{0009}' => true,
-        _ => false,
-    }
+    matches!(c, '\u{0020}' | '\u{000a}' | '\u{000d}' | '\u{0009}')
 }
 
 pub struct JsonParser<I>
@@ -195,7 +190,7 @@ impl<I: Iterator<Item = char>> JsonParser<I> {
             return Ok(());
         }
 
-        match String::from_utf16(&utf16) {
+        match String::from_utf16(utf16) {
             Ok(utf8) => s.push_str(&utf8),
             Err(err) => return self.err(format!("Invalid UTF-16 sequence {:?}: {}", &utf16, err)),
         }

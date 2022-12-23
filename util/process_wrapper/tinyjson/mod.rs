@@ -1,4 +1,4 @@
-#![allow(dead_code, unknown_lints, clippy)]
+#![allow(dead_code)]
 
 mod generator;
 mod json_value;

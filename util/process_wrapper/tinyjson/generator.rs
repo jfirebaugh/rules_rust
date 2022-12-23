@@ -1,5 +1,3 @@
-#![allow(dead_code, unknown_lints, clippy)]
-
 use super::JsonValue;
 use std::collections::HashMap;
 use std::error;
@@ -16,7 +14,7 @@ impl JsonGenerateError {
     }
 
     pub fn message(&self) -> &str {
-        &self.msg
+        self.msg
     }
 }
 
