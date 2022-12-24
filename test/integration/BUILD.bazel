@@ -1,0 +1,23 @@
+load("//:bazel_versions.bzl", "CURRENT_BAZEL_VERSION")
+load(
+    "@contrib_rules_bazel_integration_test//bazel_integration_test:defs.bzl",
+    "bazel_integration_test",
+    "bazel_integration_tests",
+    "default_test_runner",
+    "integration_test_utils",
+)
+
+sh_binary(
+    name = "issue1530_runner",
+    srcs = ["issue1530.sh"],
+)
+
+bazel_integration_test(
+    name = "issue1530_test",
+    bazel_version = CURRENT_BAZEL_VERSION,
+    test_runner = ":issue1530_runner",
+    workspace_files = integration_test_utils.glob_workspace_files("issue1530") + [
+        "//:all_files",
+    ],
+    workspace_path = "issue1530",
+)

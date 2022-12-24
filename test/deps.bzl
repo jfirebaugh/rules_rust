@@ -38,3 +38,14 @@ def rules_rust_test_deps():
             "https://github.com/rust-lang/libc/archive/0.2.20.zip",
         ],
     )
+
+    http_archive(
+        name = "contrib_rules_bazel_integration_test",
+        patch_args = ["-p1"],
+        patches = ["@//test:0001-Add-support-for-WORKSPACE.bazel.patch"],
+        sha256 = "20d670bb614d311a2a0fc8af53760439214731c3d5be2d9b0a197dccc19583f5",
+        strip_prefix = "rules_bazel_integration_test-0.9.0",
+        urls = [
+            "http://github.com/bazel-contrib/rules_bazel_integration_test/archive/v0.9.0.tar.gz",
+        ],
+    )
