@@ -1,7 +1,7 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary")
+load("//test/integration:integration_test.bzl", "rules_rust_bazel_integration_test")
 
-rust_binary(
-    name = "panic",
-    srcs = ["panic.rs"],
-    edition = "2018",
+rules_rust_bazel_integration_test(
+    name = "test",
+    srcs = ["test.rs"],
+    deps = ["//test/integration/crates:similar"],
 )
